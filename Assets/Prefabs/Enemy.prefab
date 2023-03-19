@@ -1065,7 +1065,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c1ae740e88fae64c8d594d5a1e9e6ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bloodEffect: {fileID: 2263463149026806826, guid: 49568e47289780641a5a55ac1bb5acaf,
+  bloodEffectPrefab: {fileID: 2263463149026806826, guid: 49568e47289780641a5a55ac1bb5acaf,
     type: 3}
 --- !u!1 &4905799364858897723
 GameObject:

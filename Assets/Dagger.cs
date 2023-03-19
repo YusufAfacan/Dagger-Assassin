@@ -6,87 +6,145 @@ using UnityEngine;
 
 public class Dagger : MonoBehaviour
 {
+    private Touch touch;
+    private Vector3 firstTouchPos;
+    private Vector3 lastTouchPos;
+
+    [SerializeField] private float forceAmount;
+
     public static Dagger Instance;
 
-    public event EventHandler OnHitEnemy;
     public event EventHandler OnHitGround;
 
-    private Rigidbody rb;
+    public enum State {Equipped, OnAir, BouncedOff };
+    public State state = State.Equipped;
 
-    public bool isThrowed;
+    private Rigidbody rb;
 
     private void Awake()
     {
         Instance = this;
 
-        rb = GetComponent<Rigidbody>();
-    }
-    // Start is called before the first frame update
-    void Start()
-    {
-        
     }
 
-    // Update is called once per frame
+    private void Start()
+    {
+        rb = GetComponent<Rigidbody>();
+    }
+
     void Update()
     {
-        Vector3 position = transform.position;
-        position.z = 0;
-        transform.position = position;
+        Throw();
+
+
+        switch (state)
+        {
+            case State.OnAir:
+                Vector3 position = transform.position;
+                position.z = 0;
+                transform.position = position;
+                transform.Rotate(0, 0, -360 * Time.deltaTime);
+                break;
+            case State.BouncedOff:
+                Vector3 position2 = transform.position;
+                position2.z = 0;
+                transform.position = position2;
+                break;
+            
+        }
     }
+
+    private void Throw()
+    {
+        if (state == State.Equipped)
+        {
+            if (Input.touchCount > 0)
+            {
+                touch = Input.GetTouch(0);
+
+                if (touch.phase == TouchPhase.Began)
+                {
+                    firstTouchPos = Camera.main.ScreenToWorldPoint(touch.position);
+                    firstTouchPos.z = 0;
+                }
+
+                else if (touch.phase == TouchPhase.Ended)
+                {
+                    lastTouchPos = Camera.main.ScreenToWorldPoint(touch.position);
+                    lastTouchPos.z = 0;
+
+                    Vector3 throwDirection = (lastTouchPos - firstTouchPos).normalized;
+                    rb.isKinematic = false;
+                    rb.useGravity = true;
+
+                    rb.AddForce(throwDirection * forceAmount, ForceMode.Impulse);
+                    state = State.OnAir;
+
+                }
+            }
+        }
+    }
+
+
 
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.GetComponent<Enemy>() == true)
         {
-            StartCoroutine(HitEnemy());
+            if(state == State.OnAir || state == State.BouncedOff)
+            {
+                StartCoroutine(HitEnemy());
+            }
+            
         }
 
         if (collision.gameObject.GetComponent<Ground>() == true)
         {
-            StartCoroutine(HitGround());
+            if(state == State.OnAir)
+            {
+                state = State.BouncedOff;
+                ChangeToCapsule();
+            }
         }
+    }
 
+    private IEnumerator HitEnemy()
+    {
+        state = State.BouncedOff;
+        rb.isKinematic = true;
+        yield return new WaitForSeconds(1f);
+        rb.isKinematic = false;
+        ChangeToCapsule();
 
+    }
+
+    private void ChangeToCapsule()
+    {
+        GetComponent<SphereCollider>().isTrigger = true;
+        GetComponent<CapsuleCollider>().isTrigger = false;
+    }
+
+    public void ChangeToSphere()
+    {
+        GetComponent<SphereCollider>().isTrigger = false;
+        GetComponent<CapsuleCollider>().isTrigger = true;
     }
 
     private void OnCollisionStay(Collision collision)
     {
         if (collision.gameObject.GetComponent<Ground>())
         {
-            if (rb.velocity.magnitude <= 0.25f)
+            if (state == State.BouncedOff)
             {
-                if (isThrowed == true)
+                if (rb.velocity.magnitude <= 0.01f)
                 {
-                    isThrowed = false;
+                    rb.isKinematic = true;
+                    
                     OnHitGround?.Invoke(this, EventArgs.Empty);
-
                 }
-
             }
+
+            
         }
-
-
-    }
-
-
-    IEnumerator HitEnemy()
-    {
-        rb.isKinematic = true;
-        OnHitEnemy?.Invoke(this, EventArgs.Empty);
-
-        yield return new WaitForSeconds(1f);
-
-        rb.isKinematic = false;
-
-    }
-
-    IEnumerator HitGround()
-    {
-
-        yield return new WaitForSeconds(1f);
-
-
-
     }
 }
