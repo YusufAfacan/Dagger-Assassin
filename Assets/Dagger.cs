@@ -120,14 +120,14 @@ public class Dagger : MonoBehaviour
 
     private void ChangeToCapsule()
     {
-        GetComponent<SphereCollider>().isTrigger = true;
-        GetComponent<CapsuleCollider>().isTrigger = false;
+        GetComponent<CapsuleCollider>().enabled = true;
+        GetComponent<SphereCollider>().enabled = false;
     }
 
     public void ChangeToSphere()
     {
-        GetComponent<SphereCollider>().isTrigger = false;
-        GetComponent<CapsuleCollider>().isTrigger = true;
+        GetComponent<SphereCollider>().enabled = true;
+        GetComponent<CapsuleCollider>().enabled = false;
     }
 
     private void OnCollisionStay(Collision collision)
