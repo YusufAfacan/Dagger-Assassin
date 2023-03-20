@@ -15,6 +15,7 @@ public class Dagger : MonoBehaviour
     public static Dagger Instance;
 
     public event EventHandler OnHitGround;
+    public event EventHandler OnThrow;
 
     public enum State {Equipped, OnAir, BouncedOff };
     public State state = State.Equipped;
@@ -79,6 +80,7 @@ public class Dagger : MonoBehaviour
 
                     rb.AddForce(throwDirection * forceAmount, ForceMode.Impulse);
                     state = State.OnAir;
+                    OnThrow?.Invoke(this, EventArgs.Empty);
 
                 }
             }

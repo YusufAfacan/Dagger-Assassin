@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,15 +6,17 @@ using UnityEngine;
 public class Player : MonoBehaviour
 {
     
+
     private Rigidbody rb;
 
+    public event EventHandler OnTeleport;
 
 
-    public static Player instance;
+    public static Player Instance;
 
     private void Awake()
     {
-        instance = this;
+        Instance = this;
 
     }
 
@@ -46,6 +49,7 @@ public class Player : MonoBehaviour
 
         Dagger.Instance.state = Dagger.State.Equipped;
         Dagger.Instance.ChangeToSphere();
+        OnTeleport?.Invoke(this, EventArgs.Empty);
     }
 
 
