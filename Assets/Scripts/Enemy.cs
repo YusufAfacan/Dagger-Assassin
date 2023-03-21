@@ -43,10 +43,10 @@ public class Enemy : MonoBehaviour
     {
         switch (transform.rotation.y)
         {
-            case 0:
+            case 270:
                 facing = Facing.left;
                 break;
-            case 180:
+            case 90:
                 facing = Facing.right;
                 break;
         }
@@ -61,6 +61,8 @@ public class Enemy : MonoBehaviour
 
     IEnumerator SearchTarget()
     {
+        target = FindObjectOfType<Dagger>().gameObject;
+
         float delay = 0.2f;
 
         WaitForSeconds delayTime = new(delay);
@@ -71,6 +73,26 @@ public class Enemy : MonoBehaviour
             FieldOfViewCheck();
         }
     }
+
+    bool AngleCheck(Vector3 directionToTarget)
+    {
+
+        float angle = Vector3.Angle(transform.forward, directionToTarget);
+
+        Debug.Log(angle);
+
+        if(angle < 75)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+
+        
+    }
+
 
     void FieldOfViewCheck()
     {
@@ -84,17 +106,31 @@ public class Enemy : MonoBehaviour
 
             float distanceToTarget = Vector3.Distance(middlePoint, target.position);
 
+            
+
             if (!Physics.Raycast(middlePoint, directionToTarget, distanceToTarget, obsructionMask))
             {
                 canSeeTarget = true;
 
-                if (target.gameObject.GetComponent<Dagger>())
+                if (FacingCheck())
                 {
-                    float force = 20f;
-                    target.gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
-                    target.gameObject.GetComponent<Rigidbody>().AddForce(directionToTarget * force, ForceMode.Impulse);
-                    //isShoot = true;
+                    if(AngleCheck(directionToTarget))
+                    {
+                        if (target.gameObject.GetComponent<Dagger>())
+                        {
+                            float force = 10f;
+                            target.gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
+                            target.gameObject.GetComponent<Rigidbody>().AddForce(directionToTarget * force, ForceMode.Impulse);
+                            //isShoot = true;
+                        }
+                    }
+
+
+                    
                 }
+
+
+                
 
                 //if (FacingCheck())
                 //{
