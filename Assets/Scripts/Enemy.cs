@@ -1,17 +1,21 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
+
 
 public class Enemy : MonoBehaviour
 {
     [SerializeField] private GameObject bloodEffectPrefab;
 
-    [SerializeField] private GameObject bulletPrefab;
+    public GameObject gunSmoke;
+    
 
-    public float radius;
+    [SerializeField] private Transform firePoint;
+
+    public float sightRadius;
+    public float hearRadius;
     private Vector3 middlePoint;
-    public Transform firePoint;
+    
     bool isShoot;
 
     public GameObject target;
@@ -23,7 +27,7 @@ public class Enemy : MonoBehaviour
 
     private enum Facing { left, right };
 
-    private Facing facing;
+    [SerializeField] private Facing facing;
 
     private void Start()
     {
@@ -35,8 +39,44 @@ public class Enemy : MonoBehaviour
         //Dagger.Instance.OnHitGround += Dagger_OnHitGround;
         //Player.Instance.OnTeleport += Player_OnTeleport;
         StartCoroutine(SearchTarget());
+
+        Assassin.OnTeleport += Assassin_OnTeleport;
+
     }
 
+    private void Assassin_OnTeleport(object sender, System.EventArgs e)
+    {
+        HearAndShoot();
+    }
+
+    void HearAndShoot()
+    {
+        Transform assassin = FindObjectOfType<Assassin>().transform;
+
+        if (Vector3.Distance(middlePoint, assassin.position) <= hearRadius)
+        {
+            if (!FacingCheck())
+            {
+                transform.Rotate(Vector3.up, 180f);
+                if (facing == Facing.left)
+                facing = Facing.right;
+                else if (facing == Facing.right)
+                facing = Facing.left;
+            }
+
+            Vector3 directionToTarget = (assassin.position - transform.position).normalized;
+
+            float distanceToTarget = Vector3.Distance(middlePoint, assassin.position);
+
+
+            if (!Physics.Raycast(middlePoint, directionToTarget, distanceToTarget, obsructionMask))
+            {
+                Shoot(assassin, directionToTarget);
+            }
+            
+        }
+
+    }
 
 
     private void SetFacing()
@@ -97,7 +137,7 @@ public class Enemy : MonoBehaviour
     void FieldOfViewCheck()
     {
 
-        Collider[] rangeCheck = Physics.OverlapSphere(middlePoint, radius, targetMask);
+        Collider[] rangeCheck = Physics.OverlapSphere(middlePoint, sightRadius, targetMask);
 
         if (rangeCheck.Length > 0)
         {
@@ -118,10 +158,7 @@ public class Enemy : MonoBehaviour
                     {
                         if (target.gameObject.GetComponent<Dagger>())
                         {
-                            float force = 10f;
-                            target.gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
-                            target.gameObject.GetComponent<Rigidbody>().AddForce(directionToTarget * force, ForceMode.Impulse);
-                            //isShoot = true;
+                            Shoot(target, directionToTarget);
                         }
                     }
 
@@ -129,24 +166,6 @@ public class Enemy : MonoBehaviour
                     
                 }
 
-
-                
-
-                //if (FacingCheck())
-                //{
-                    
-
-                //    //if (!isShoot)
-                //    //{
-                        
-                        
-                //    //}
-
-                    
-
-
-                //    //Shoot();
-                //}
                 else
                 {
                     canSeeTarget = false;
@@ -164,6 +183,17 @@ public class Enemy : MonoBehaviour
             canSeeTarget = false;
         }
 
+    }
+
+    private void Shoot(Transform target, Vector3 directionToTarget)
+    {
+        float force = 10f;
+        target.gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
+        target.gameObject.GetComponent<Rigidbody>().AddForce(directionToTarget * force, ForceMode.Impulse);
+
+        GameObject gunSmokeIns =  Instantiate(gunSmoke, firePoint.position, Quaternion.identity);
+        Destroy(gunSmokeIns, 0.2f);
+        //isShoot = true;
     }
 
     bool FacingCheck()
@@ -194,19 +224,7 @@ public class Enemy : MonoBehaviour
         return false;
     }
 
-    void Shoot()
-    {
-        if (!isShoot)
-        {
-
-
-
-            //GameObject bullet = Instantiate(bulletPrefab, firePoint.position, Quaternion.identity);
-            //bullet.GetComponent<Bullet>().target = target.transform;
-            //isShoot = true;
-        }
-        
-    }
+   
 
     //private void Dagger_OnHitGround(object sender, System.EventArgs e)
     //{
@@ -226,9 +244,16 @@ public class Enemy : MonoBehaviour
     {
         if (collision.gameObject.GetComponent<Dagger>())
         {
-            ContactPoint contactPoint = collision.contacts[0];
-            Instantiate(bloodEffectPrefab, contactPoint.point, transform.rotation);
-            Destroy(gameObject, 1f);
+            Dagger.State daggerState = collision.gameObject.GetComponent<Dagger>().state;
+
+            if (daggerState == Dagger.State.OnAir || daggerState == Dagger.State.BouncedOff)
+            {
+                ContactPoint contactPoint = collision.contacts[0];
+                Instantiate(bloodEffectPrefab, contactPoint.point, transform.rotation);
+                Destroy(gameObject, 1f);
+            }
+
+            
         }
     }
 
@@ -237,6 +262,7 @@ public class Enemy : MonoBehaviour
         //Dagger.Instance.OnThrow -= Dagger_OnThrow;
         //Dagger.Instance.OnHitGround -= Dagger_OnHitGround;
         //Player.Instance.OnTeleport -= Player_OnTeleport;
+        Assassin.OnTeleport -= Assassin_OnTeleport;
         StopCoroutine(SearchTarget());
     }
 

@@ -12,15 +12,12 @@ public class Trajectory : MonoBehaviour
     Transform[] dotsList;
 
     Vector2 pos;
-    //dot pos
     float timeStamp;
 
     //--------------------------------
     void Start()
     {
-        //hide trajectory in the start
         Hide();
-        //prepare dots
         PrepareDots();
     }
 

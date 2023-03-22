@@ -1,7 +1,10 @@
+using System;
 using UnityEngine;
 
 public class Assassin : MonoBehaviour
 {
+
+    public static event EventHandler OnTeleport;
 
     Camera cam;
 
@@ -9,6 +12,8 @@ public class Assassin : MonoBehaviour
     public Trajectory trajectory;
 
     [SerializeField] float throwForce;
+
+    [SerializeField] private GameObject teleportEffect;
 
     bool isDragging = false;
 
@@ -33,13 +38,20 @@ public class Assassin : MonoBehaviour
     private void Teleport()
     {
         transform.position = dagger.Pos;
+        Instantiate(teleportEffect, transform.position, Quaternion.identity);
+        OnTeleport?.Invoke(this, EventArgs.Empty);
         EquipDagger();
     }
+
+    
+
+
 
     private void EquipDagger()
     {
         dagger.transform.SetPositionAndRotation(transform.position + new Vector3(0.35f, 0.84f, 0), Quaternion.identity);
         dagger.state = Dagger.State.Equipped;
+        
     }
 
     void Update()
@@ -93,4 +105,5 @@ public class Assassin : MonoBehaviour
         trajectory.Hide();
     }
 
+   
 }
