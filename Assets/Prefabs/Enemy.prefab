@@ -1166,9 +1166,11 @@ MonoBehaviour:
     type: 3}
   gunSmoke: {fileID: 4807284669522170408, guid: d9c36dfcb1aa0384db0a8f329e262019,
     type: 3}
+  sightAngle: 75
   firePoint: {fileID: 1269980774}
   sightRadius: 5
   hearRadius: 3
+  shootInterval: 0
   target: {fileID: 0}
   targetMask:
     serializedVersion: 2
@@ -1177,6 +1179,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 512
   canSeeTarget: 0
+  facing: 0
 --- !u!1 &4905799364858897723
 GameObject:
   m_ObjectHideFlags: 0

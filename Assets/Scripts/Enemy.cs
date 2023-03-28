@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,15 +9,17 @@ public class Enemy : MonoBehaviour
     [SerializeField] private GameObject bloodEffectPrefab;
 
     public GameObject gunSmoke;
-    
+
+    public int sightAngle;
 
     [SerializeField] private Transform firePoint;
 
     public float sightRadius;
     public float hearRadius;
     private Vector3 middlePoint;
+    public float shootInterval;
     
-    bool isShoot;
+    private bool isReloaded = true;
 
     public GameObject target;
 
@@ -24,6 +27,8 @@ public class Enemy : MonoBehaviour
     public LayerMask obsructionMask;
 
     public bool canSeeTarget;
+
+    [Range(0,5)] public float reloadTime;
 
     private enum Facing { left, right };
 
@@ -38,14 +43,29 @@ public class Enemy : MonoBehaviour
         //Dagger.Instance.OnThrow += Dagger_OnThrow;
         //Dagger.Instance.OnHitGround += Dagger_OnHitGround;
         //Player.Instance.OnTeleport += Player_OnTeleport;
-        StartCoroutine(SearchTarget());
+        //StartCoroutine(SearchTarget());
 
         Assassin.OnTeleport += Assassin_OnTeleport;
 
     }
 
+    private void Update()
+    {
+        if (isReloaded)
+        {
+            target = FindObjectOfType<Dagger>().gameObject;
+
+            FieldOfViewCheck();
+        }
+    }
+
     private void Assassin_OnTeleport(object sender, System.EventArgs e)
     {
+        if (isReloaded == false)
+        {
+            isReloaded = true;
+        }
+
         HearAndShoot();
     }
 
@@ -103,9 +123,9 @@ public class Enemy : MonoBehaviour
     {
         target = FindObjectOfType<Dagger>().gameObject;
 
-        float delay = 0.2f;
+        //float delay = 0.4f;
 
-        WaitForSeconds delayTime = new(delay);
+        WaitForSeconds delayTime = new(shootInterval);
 
         while (true)
         {
@@ -119,9 +139,9 @@ public class Enemy : MonoBehaviour
 
         float angle = Vector3.Angle(transform.forward, directionToTarget);
 
-        Debug.Log(angle);
+        //Debug.Log(angle);
 
-        if(angle < 75)
+        if(angle < sightAngle)
         {
             return true;
         }
@@ -160,8 +180,16 @@ public class Enemy : MonoBehaviour
                         {
                             Shoot(target, directionToTarget);
                         }
-                    }
 
+                        else
+                        {
+                            canSeeTarget = false;
+                        }
+                    }
+                    else
+                    {
+                        canSeeTarget = false;
+                    }
 
                     
                 }
@@ -169,6 +197,7 @@ public class Enemy : MonoBehaviour
                 else
                 {
                     canSeeTarget = false;
+                    
                 }
 
             }
@@ -193,7 +222,13 @@ public class Enemy : MonoBehaviour
 
         GameObject gunSmokeIns =  Instantiate(gunSmoke, firePoint.position, Quaternion.identity);
         Destroy(gunSmokeIns, 0.2f);
-        //isShoot = true;
+        isReloaded = false;
+        Invoke(nameof(Reload), reloadTime);
+    }
+
+    private void Reload()
+    {
+        isReloaded = true;
     }
 
     bool FacingCheck()
