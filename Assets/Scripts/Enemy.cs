@@ -6,6 +6,8 @@ using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
+    public static event EventHandler OnDeath;
+
     [SerializeField] private GameObject bloodEffectPrefab;
 
     public GameObject gunSmoke;
@@ -285,6 +287,7 @@ public class Enemy : MonoBehaviour
             {
                 ContactPoint contactPoint = collision.contacts[0];
                 Instantiate(bloodEffectPrefab, contactPoint.point, transform.rotation);
+                OnDeath?.Invoke(this, EventArgs.Empty);
                 Destroy(gameObject, 1f);
             }
 
